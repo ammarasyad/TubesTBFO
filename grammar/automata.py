@@ -29,12 +29,13 @@ def check_states(states: set, transitions: dict, final_state: set):
 
 
 class FA:
-    def __init__(self, states: set, alphabet: list, transitions: dict, start_state: str, final_state: set):
+    def __init__(self, states: set, alphabet: list, transitions: dict, start_state: str, final_state: set, debug=False):
         self.states = states
         self.alphabet = alphabet
         self.transitions = transitions
         self.start_state = start_state
         self.final_state = final_state
+        self.debug = debug
 
     def process(self, input_str: str) -> bool:
         check_states(self.states, self.transitions, self.final_state)
@@ -47,7 +48,8 @@ class FA:
             try:
                 current_state = self.transitions[(current_state, c)]
             except KeyError:
-                print(f"Transition from {current_state} with {c} is not defined")
+                if self.debug:
+                    print(f"Transition from {current_state} with {c} is not defined")
                 return False
         return current_state in self.final_state
 
@@ -89,32 +91,30 @@ def check_name(input_str: str):
     return fa.process(input_str)
 
 
-# TODO: Refine this, minimize the states if possible, and check for edge cases
 def check_arithmetic(input_str: str) -> bool:
     # No ternary operators because that is hard
-    operators = ["+", "-", "*", "/", "%", "++", "--", "(", ")"]
+    operators = ["+", "-", "*", "/", "%", "++", "--"]
     secondary_ops = ["=", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">", "<", ">=", "<=", "===", "!==", ";"]
     # filtered = [c for c in input_str.split() if c not in operators]
     # for f in filtered:
     #     if not f.isdigit():
     #         print(check_name(f))
-    states = {"q0", "q1", "q2", "q3", "q4"}
+    states = {"q0", "q1", "q2", "q3", "q4", "q5"}
     alphabet = list(string.ascii_letters) + list(string.digits) + operators + secondary_ops + ["_", " "]
     # Pseudo NFA transition states?
-    transitions = {**{("q0", p): "q0" for p in string.ascii_letters + string.digits + "(" + " "},
-                   **{("q0", p): "q1" for p in operators},
-                   **{("q1", p): "q1" for p in string.ascii_letters + string.digits + " "},
-                   **{("q1", p): "q2" for p in string.ascii_letters + string.digits + ''.join(operators)},
-                   **{("q1", p): "q3" for p in secondary_ops},
-                   **{("q2", p): "q1" for p in string.ascii_letters + string.digits + ")" + " "},
-                   **{("q2", p): "q3" for p in secondary_ops},
-                   **{("q3", p): "q4" for p in alphabet}}
+    transitions = {**{("q0", p): "q1" for p in string.ascii_letters + string.digits},
+                   **{("q1", p): "q1" for p in string.ascii_letters + string.digits},
+                   **{("q1", p): "q2" for p in operators},
+                   **{("q2", p): "q2" for p in string.ascii_letters + string.digits + " "},
+                   **{("q2", p): "q3" for p in string.ascii_letters + string.digits + ''.join(operators)},
+                   **{("q2", p): "q4" for p in secondary_ops},
+                   **{("q3", p): "q2" for p in string.ascii_letters + string.digits + " "},
+                   **{("q3", p): "q4" for p in secondary_ops},
+                   **{("q4", p): "q5" for p in alphabet}}
     start_state = "q0"
-    final_states = {"q2", "q3"}
+    final_states = {"q3", "q4", "q5"}
 
     fa = FA(states, alphabet, transitions, start_state, final_states)
 
     return fa.process(input_str)
 
-
-print(check_arithmetic("a + b + c + d / e * f % g"))
