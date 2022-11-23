@@ -1,21 +1,19 @@
 import string
-from timeit import timeit
+from tokenizer import tokenize_arithmetic
 
 
-class FAStateException(Exception):
+class DFAStateException(Exception):
     pass
 
 
 def check_states(states: set, transitions: dict, final_state: set):
     # Check if transition states and final states are in states
-    # I'm pretty sure this is not needed, but I love over-engineering
-    # I LOVE READABLE CODE!!!!!!
     no_states = []
     for fstate in final_state:
         if fstate not in states:
             no_states.append(fstate)
     if no_states:
-        raise FAStateException(
+        raise DFAStateException(
             f"Final {'states' if len(no_states) > 1 else 'state'} {', '.join(no_states)} {'are' if len(no_states) > 1 else 'is'} not in states")
     no_states.clear()
     for key, value in transitions.items():
@@ -24,11 +22,11 @@ def check_states(states: set, transitions: dict, final_state: set):
         if value not in states:
             no_states.append(value)
     if no_states:
-        raise FAStateException(
+        raise DFAStateException(
             f"Transition {'states' if len(no_states) > 1 else 'state'} {', '.join(no_states)} {'are' if len(no_states) > 1 else 'is'} not in states")
 
 
-class FA:
+class DFA:
     def __init__(self, states: set, alphabet: list, transitions: dict, start_state: str, final_state: set, debug=False):
         self.states = states
         self.alphabet = alphabet
@@ -54,17 +52,8 @@ class FA:
         return current_state in self.final_state
 
 
-# class NFA(FA):
-#     def __init__(self, states: set, alphabet: list, transitions: dict, start_state: str, final_state: set):
-#         super().__init__(states, alphabet, transitions, start_state, final_state)
-#         self.epsilon_states = set()
-#         for key, value in self.transitions.items():
-#             if key[1] == "e":
-#                 self.epsilon_states.add(key[0])
-#                 self.epsilon_states.add(value)
-#
-#     def process(self, input_str: str) -> bool:
-#         check_states(self.states, self.transitions, self.final_state)
+def get_dupe_indices(x, seq):
+    return [i for (y, i) in zip(seq, range(len(seq))) if x == y]
 
 
 def check_name(input_str: str):
@@ -74,47 +63,88 @@ def check_name(input_str: str):
     if input_str in reserved:
         return False
 
-    # (D)FA Initialization
+    # DFA Initialization
     states = {"q0", "q1"}
     alphabet = list(string.ascii_letters) + list(string.digits) + ["_"]
     # transitions = {
     #     ("q0", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"): "q1",
     #     ("q1", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"): "q1"
     # }
-    transitions = {**{("q0", p): "q1" for p in string.ascii_letters + "_"},
-                   **{("q1", p): "q1" for p in string.ascii_letters + string.digits + "_"}}
+    transitions = {**{("q0", p): "q1" for p in string.ascii_letters + "_" + "$"},
+                   **{("q1", p): "q1" for p in string.ascii_letters + string.digits + "_" + "$"}}
     start_state = "q0"
     final_states = {"q1"}
 
-    fa = FA(states, alphabet, transitions, start_state, final_states)
+    dfa = DFA(states, alphabet, transitions, start_state, final_states)
 
-    return fa.process(input_str)
+    return dfa.process(input_str)
 
 
+# TODO: Rewrite this function
 def check_arithmetic(input_str: str) -> bool:
-    # No ternary operators because that is hard
-    operators = ["+", "-", "*", "/", "%", "++", "--"]
-    secondary_ops = ["=", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">", "<", ">=", "<=", "===", "!==", ";"]
+    operators = ["+", "++", "-", "--", "*", "/", "%", "&", "|", "^", "~", "<<", ">>", ">>>"]
+    tokens = tokenize_arithmetic(input_str)
+    variables = [v for t, v in tokens if t == "VAR"]
+    ops = [v for t, v in tokens if t == "OP"]
+    nums = [v for t, v in tokens if t == "NUM"]
+    floats = [v for t, v in tokens if t == "FLOAT"]
+
+    # The great filter
+    # final = ["" for _ in range(len(tokens))]
+    for var in variables:
+        if not check_name(var):
+            return False
+        # final.insert(tokens.index(("VAR", var)), "v")
+    for op in ops:
+        if op not in operators:
+            return False
+        # for i in get_dupe_indices(("OP", op), tokens):
+        #     final.insert(i, op)
+    # for num in nums:
+    #     final.insert(tokens.index(("NUM", num)), "n")
+    # for flt in floats:
+    #     final.insert(tokens.index(("FLOAT", flt)), "f")
+    # final = " ".join([f for f in final if f != ""])
+    # print(final)
+    return True
+    # input_str = input_str.replace(" ", "")
+
+    # # secondary_ops = ["=", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">", "<", ">=", "<=", "===", "!==", ";"]
     # filtered = [c for c in input_str.split() if c not in operators]
     # for f in filtered:
     #     if not f.isdigit():
     #         print(check_name(f))
-    states = {"q0", "q1", "q2", "q3", "q4", "q5"}
-    alphabet = list(string.ascii_letters) + list(string.digits) + operators + secondary_ops + ["_", " "]
-    # Pseudo NFA transition states?
-    transitions = {**{("q0", p): "q1" for p in string.ascii_letters + string.digits},
-                   **{("q1", p): "q1" for p in string.ascii_letters + string.digits},
-                   **{("q1", p): "q2" for p in operators},
-                   **{("q2", p): "q2" for p in string.ascii_letters + string.digits + " "},
-                   **{("q2", p): "q3" for p in string.ascii_letters + string.digits + ''.join(operators)},
-                   **{("q2", p): "q4" for p in secondary_ops},
-                   **{("q3", p): "q2" for p in string.ascii_letters + string.digits + " "},
-                   **{("q3", p): "q4" for p in secondary_ops},
-                   **{("q4", p): "q5" for p in alphabet}}
-    start_state = "q0"
-    final_states = {"q3", "q4", "q5"}
+    # states = {"q0", "q1", "q1_1", "q1_2", "q2", "q3", "q4", "q5"}
+    # alphabet = list(string.ascii_letters) + list(string.digits) + operators + ["_", " "]
+    # transitions = {**{("q0", p): "q1" for p in string.ascii_letters + string.digits},
+    #                **{("q1", p): "q1" for p in string.ascii_letters},
+    #                # check for floating point
+    #                **{("q1", p): "q1_1" for p in string.digits},
+    #                **{("q1_1", p): "q1_1" for p in string.digits},
+    #                **{("q1_1", "."): "q1_2"},
+    #                **{("q1_2", p): "q1_2" for p in string.digits},
+    #                **{("q1_2", " "): "q2"},
+    #                # end checking float
+    #                **{("q1", " "): "q2"},
+    #                **{("q2", p): "q3" for p in operators},
+    #                **{("q3", p)}}
+    # # transitions = {**{("q0", p): "q1" for p in string.ascii_letters + string.digits},
+    # #                **{("q1", p): "q1" for p in string.ascii_letters + string.digits},
+    # #                **{("q1", p): "q2" for p in operators},
+    # #                **{("q2", p): "q2" for p in string.ascii_letters + string.digits + " "},
+    # #                **{("q2", p): "q3" for p in string.ascii_letters + string.digits + ''.join(operators)},
+    # #                **{("q2", p): "q4" for p in secondary_ops},
+    # #                **{("q3", p): "q2" for p in string.ascii_letters + string.digits + " "},
+    # #                **{("q3", p): "q4" for p in secondary_ops},
+    # #                **{("q4", p): "q5" for p in alphabet}}
+    #
+    # start_state = "q0"
+    # final_states = {"q3", "q4", "q5"}
+    #
+    # fa = DFA(states, alphabet, transitions, start_state, final_states)
+    #
+    # return fa.process(input_str)
 
-    fa = FA(states, alphabet, transitions, start_state, final_states)
 
-    return fa.process(input_str)
-
+if __name__ == "__main__":
+    print(check_arithmetic("ad + ab + 2 + 3.4"))
