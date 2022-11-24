@@ -9,7 +9,8 @@ def isfloat(input_str: str) -> bool:
 
 
 def tokenize_arithmetic(input_str: str):
-    operators = ["+", "++", "-", "--", "*", "/", "%", "&", "|", "^", "~", "<<", ">>", ">>>"]
+    operators = ["+", "++", "-", "--", "*", "/", "%", "&", "|", "^", "~", "<<", ">>", ">>>",
+                 "?", ":"]
     if " " in input_str:
         input_str = input_str.replace(" ", "")
 

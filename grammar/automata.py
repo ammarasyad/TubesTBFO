@@ -59,7 +59,7 @@ def check_name(input_str: str):
 
     # DFA Initialization
     states = {"q0", "q1"}
-    alphabet = list(string.ascii_letters) + list(string.digits) + ["_"]
+    alphabet = list(string.ascii_letters) + list(string.digits) + ["_", "$"]
     transitions = {**{("q0", p): "q1" for p in string.ascii_letters + "_" + "$"},
                    **{("q1", p): "q1" for p in string.ascii_letters + string.digits + "_" + "$"}}
     start_state = "q0"
@@ -72,6 +72,7 @@ def check_name(input_str: str):
 
 def check_arithmetic(input_str: str) -> bool:
     operators = ["+", "++", "-", "--", "*", "/", "%", "&", "|", "^", "~", "<<", ">>", ">>>"]
+    ternary = ["?", ":"]
     tokens = tokenize_arithmetic(input_str)
     variables = [v for t, v in tokens if t == "VAR"]
     ops = [v for t, v in tokens if t == "OP"]
@@ -83,11 +84,14 @@ def check_arithmetic(input_str: str) -> bool:
         if not check_name(var):
             return False
     for op in ops:
-        if op not in operators:
+        if op not in operators + ternary:
             return False
-    states = {"q0", "q1", "q2", "q3"}
-    alphabet = variables + operators + nums + floats
+    states = {"q0", "q1", "qt1", "qt2", "q2", "q3"}
+    alphabet = variables + operators + nums + floats + ternary
     transitions = {**{("q0", p): "q1" for p in variables + nums + floats},
+                   **{("q1", "?"): "qt1"},
+                   **{("qt1", p): "qt2" for p in variables + nums + floats},
+                   **{("qt2", ":"): "q2"},
                    **{("q1", p): "q2" for p in operators},
                    **{("q2", p): "q3" for p in variables + nums + floats},
                    **{("q3", p): "q2" for p in operators}}
@@ -95,8 +99,8 @@ def check_arithmetic(input_str: str) -> bool:
     final_states = {"q3"}
 
     fa = DFA(states, alphabet, transitions, start_state, final_states)
-    return fa.process([t[1] for t in tokens])
+    return fa.process((t[1] for t in tokens))
 
 
 if __name__ == "__main__":
-    print(check_arithmetic("ad+ab-2*.4"))
+    print(check_arithmetic("a ? b : c"))
