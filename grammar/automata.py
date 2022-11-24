@@ -35,10 +35,8 @@ class DFA:
         self.final_state = final_state
         self.debug = debug
 
-    def process(self, input_str: str) -> bool:
+    def process(self, input_str) -> bool:
         check_states(self.states, self.transitions, self.final_state)
-
-        # Actually checking the input string
         current_state = self.start_state
         for c in input_str:
             if c not in self.alphabet:
@@ -52,10 +50,6 @@ class DFA:
         return current_state in self.final_state
 
 
-def get_dupe_indices(x, seq):
-    return [i for (y, i) in zip(seq, range(len(seq))) if x == y]
-
-
 def check_name(input_str: str):
     # Check if input_str is not a reserved name in JavaScript
     with open("reservedKeywords.txt") as f:
@@ -66,10 +60,6 @@ def check_name(input_str: str):
     # DFA Initialization
     states = {"q0", "q1"}
     alphabet = list(string.ascii_letters) + list(string.digits) + ["_"]
-    # transitions = {
-    #     ("q0", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"): "q1",
-    #     ("q1", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"): "q1"
-    # }
     transitions = {**{("q0", p): "q1" for p in string.ascii_letters + "_" + "$"},
                    **{("q1", p): "q1" for p in string.ascii_letters + string.digits + "_" + "$"}}
     start_state = "q0"
@@ -80,7 +70,6 @@ def check_name(input_str: str):
     return dfa.process(input_str)
 
 
-# TODO: Rewrite this function
 def check_arithmetic(input_str: str) -> bool:
     operators = ["+", "++", "-", "--", "*", "/", "%", "&", "|", "^", "~", "<<", ">>", ">>>"]
     tokens = tokenize_arithmetic(input_str)
@@ -90,61 +79,24 @@ def check_arithmetic(input_str: str) -> bool:
     floats = [v for t, v in tokens if t == "FLOAT"]
 
     # The great filter
-    # final = ["" for _ in range(len(tokens))]
     for var in variables:
         if not check_name(var):
             return False
-        # final.insert(tokens.index(("VAR", var)), "v")
     for op in ops:
         if op not in operators:
             return False
-        # for i in get_dupe_indices(("OP", op), tokens):
-        #     final.insert(i, op)
-    # for num in nums:
-    #     final.insert(tokens.index(("NUM", num)), "n")
-    # for flt in floats:
-    #     final.insert(tokens.index(("FLOAT", flt)), "f")
-    # final = " ".join([f for f in final if f != ""])
-    # print(final)
-    return True
-    # input_str = input_str.replace(" ", "")
+    states = {"q0", "q1", "q2", "q3"}
+    alphabet = variables + operators + nums + floats
+    transitions = {**{("q0", p): "q1" for p in variables + nums + floats},
+                   **{("q1", p): "q2" for p in operators},
+                   **{("q2", p): "q3" for p in variables + nums + floats},
+                   **{("q3", p): "q2" for p in operators}}
+    start_state = "q0"
+    final_states = {"q3"}
 
-    # # secondary_ops = ["=", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">", "<", ">=", "<=", "===", "!==", ";"]
-    # filtered = [c for c in input_str.split() if c not in operators]
-    # for f in filtered:
-    #     if not f.isdigit():
-    #         print(check_name(f))
-    # states = {"q0", "q1", "q1_1", "q1_2", "q2", "q3", "q4", "q5"}
-    # alphabet = list(string.ascii_letters) + list(string.digits) + operators + ["_", " "]
-    # transitions = {**{("q0", p): "q1" for p in string.ascii_letters + string.digits},
-    #                **{("q1", p): "q1" for p in string.ascii_letters},
-    #                # check for floating point
-    #                **{("q1", p): "q1_1" for p in string.digits},
-    #                **{("q1_1", p): "q1_1" for p in string.digits},
-    #                **{("q1_1", "."): "q1_2"},
-    #                **{("q1_2", p): "q1_2" for p in string.digits},
-    #                **{("q1_2", " "): "q2"},
-    #                # end checking float
-    #                **{("q1", " "): "q2"},
-    #                **{("q2", p): "q3" for p in operators},
-    #                **{("q3", p)}}
-    # # transitions = {**{("q0", p): "q1" for p in string.ascii_letters + string.digits},
-    # #                **{("q1", p): "q1" for p in string.ascii_letters + string.digits},
-    # #                **{("q1", p): "q2" for p in operators},
-    # #                **{("q2", p): "q2" for p in string.ascii_letters + string.digits + " "},
-    # #                **{("q2", p): "q3" for p in string.ascii_letters + string.digits + ''.join(operators)},
-    # #                **{("q2", p): "q4" for p in secondary_ops},
-    # #                **{("q3", p): "q2" for p in string.ascii_letters + string.digits + " "},
-    # #                **{("q3", p): "q4" for p in secondary_ops},
-    # #                **{("q4", p): "q5" for p in alphabet}}
-    #
-    # start_state = "q0"
-    # final_states = {"q3", "q4", "q5"}
-    #
-    # fa = DFA(states, alphabet, transitions, start_state, final_states)
-    #
-    # return fa.process(input_str)
+    fa = DFA(states, alphabet, transitions, start_state, final_states)
+    return fa.process([t[1] for t in tokens])
 
 
 if __name__ == "__main__":
-    print(check_arithmetic("ad + ab + 2 + 3.4"))
+    print(check_arithmetic("ad+ab-2*.4"))
