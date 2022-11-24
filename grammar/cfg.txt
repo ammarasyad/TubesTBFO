@@ -1,0 +1,71 @@
+MAIN_STATES -> MAIN_STATES MAIN_STATES
+
+// Conditional Algorithm + States
+CONDITION -> PARENTHESES_OPEN CONDITION PARENTHESES_CLOSE | 
+
+// Operators
+ARITHMATIC -> PLUS | MINUS | MULTIPLY | DIVIDE | MODULO | POWER
+LOGICAL -> and | or | EXCLAMATION
+COMPARISON -> GREATER_THAN | LESS_THAN | GREATER_THAN EQ | LESS_THAN EQ | EQ EQ | EQ EQ EQ | EXCLAMATION EQ
+ASSIGNMENT -> EQ | PLUS EQ | MINUS EQ | MULTIPLY EQ | DIVIDE EQ | MODULO EQ | POWER EQ
+
+// Function Algorithm + States
+IF_STATES_FUNC -> IF_ALGO_FUNC | IF_ALGO_FUNC ELSE_STATES_FUNC
+IF_ALGO_FUNC -> 
+
+// Terminal and Non-terminal statements + symbols
+PLUS -> +
+MINUS -> -
+MULTIPLY -> *
+DIVIDE -> /
+MODULO -> %
+POWER -> MULTIPLY MULTIPLY
+DELETE -> delete
+BOOLEAN -> true | false
+NULL -> null
+
+CONSOLE -> console
+LOG -> log
+
+IF -> if
+ELSE -> else
+SWITCH -> switch
+CASE -> case
+DEFAULT -> default
+BREAK -> break
+CONTINUE -> continue
+TRY -> try
+CATCH -> catch
+FINALLY -> finally
+THROW -> throw
+WHILE -> while
+FOR -> for
+WORD -> word
+NUM -> num
+
+VAR -> var
+LET -> let
+CONST -> const
+FUNCTION -> function
+REQUIRE -> require
+RETURN -> return
+
+COLON -> :
+SEMICOLON -> ;
+PERIOD -> .
+COMMA -> ,
+SQUARE_OPEN -> [
+SQUARE_CLOSE -> ]
+PARENTHESES_OPEN -> (
+PARENTHESES_CLOSE -> )
+CURLY_OPEN -> {
+CURLY_CLOSE -> }
+EQ -> =
+GREATER_THAN -> >
+LESS_THAN -> <
+EXCLAMATION -> !
+SINGLE_COMMENTS -> //
+MULTI_COMMENTS_OPEN -> /*
+MULTI_COMMENTS_CLOSE -> */
+SINGLE_QUOTE -> '
+DOUBLE_QUOTE -> "
