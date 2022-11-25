@@ -96,7 +96,7 @@ def convert(filename):
     for rule in term_rules:
         cfg.append(rule)
     cfg = check_rhs(cfg)
-    with open(os.getcwd() + r"\cnf.txt", "w") as f:
+    with open(os.getcwd() + r"\grammar\cnf.txt", "w") as f:
         for prod in cfg:
             f.write(" ".join(prod).replace(" ", " -> ", 1) + "\n")
 
