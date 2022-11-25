@@ -1,12 +1,13 @@
+import os
 import string
-from tokenizer import tokenize_arithmetic
+from grammar.tokenizer import tokenize_arithmetic
 
 
 class DFAStateException(Exception):
     pass
 
 
-def check_states(states: set, transitions: dict, final_state: set):
+def _check_states(states: set, transitions: dict, final_state: set):
     # Check if transition states and final states are in states
     no_states = []
     for fstate in final_state:
@@ -36,7 +37,7 @@ class DFA:
         self.debug = debug
 
     def process(self, input_str) -> bool:
-        check_states(self.states, self.transitions, self.final_state)
+        _check_states(self.states, self.transitions, self.final_state)
         current_state = self.start_state
         for c in input_str:
             if c not in self.alphabet:
@@ -52,7 +53,7 @@ class DFA:
 
 def check_name(input_str: str):
     # Check if input_str is not a reserved name in JavaScript
-    with open("reservedKeywords.txt") as f:
+    with open(os.getcwd() + r"\grammar\reservedKeywords.txt") as f:
         reserved = f.read().splitlines()
     if input_str in reserved:
         return False

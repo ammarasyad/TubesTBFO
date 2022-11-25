@@ -1,7 +1,7 @@
 import os
 
 
-def get_cfg(filename):
+def _get_cfg(filename):
     cfg = []
     with open(filename) as f:
         lines = f.readlines()
@@ -26,7 +26,7 @@ def get_cfg(filename):
     return cfg
 
 
-def get_terminals(filename):
+def _get_terminals(filename):
     term_rules = []
     with open(filename) as f:
         lines = f.readlines()
@@ -40,7 +40,7 @@ def get_terminals(filename):
     return [i[0] for i in term_rules], term_rules
 
 
-def remove_unit_productions(cfg, terminals):
+def _remove_unit_productions(cfg, terminals):
     to_be_removed = []
     for prod in cfg:
         if len(prod) == 2 and prod[1] not in terminals:
@@ -63,11 +63,11 @@ def remove_unit_productions(cfg, terminals):
     return cfg
 
 
-def get_rule(terminal, rules):
+def _get_rule(terminal, rules):
     return [rule for rule in rules if rule[0] == terminal][0][0]
 
 
-def check_rhs(cfg):
+def _check_rhs(cfg):
     idx = 1
     for prod in cfg:
         if len(prod) > 3:
@@ -90,12 +90,12 @@ def check_rhs(cfg):
 
 
 def convert(filename):
-    cfg = get_cfg(filename)
-    terminals, term_rules = get_terminals(filename)
-    cfg = remove_unit_productions(cfg, terminals)
+    cfg = _get_cfg(filename)
+    terminals, term_rules = _get_terminals(filename)
+    cfg = _remove_unit_productions(cfg, terminals)
     for rule in term_rules:
         cfg.append(rule)
-    cfg = check_rhs(cfg)
+    cfg = _check_rhs(cfg)
     with open(os.getcwd() + r"\grammar\cnf.txt", "w") as f:
         for prod in cfg:
             f.write(" ".join(prod).replace(" ", " -> ", 1) + "\n")
