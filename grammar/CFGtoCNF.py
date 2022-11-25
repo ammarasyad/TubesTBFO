@@ -6,7 +6,7 @@ def get_cfg(filename):
     with open(filename) as f:
         lines = f.readlines()
     for line in lines:
-        if line == "// Terminal and Non-terminal statements + symbols\n":
+        if line.startswith("// Terminal"):
             break
         if line.startswith("//") or line == "\n":
             continue
@@ -30,7 +30,7 @@ def get_terminals(filename):
     term_rules = []
     with open(filename) as f:
         lines = f.readlines()
-    start = lines.index("// Terminal and Non-terminal statements + symbols\n")
+    start = [lines.index(i) for i in lines if i.startswith("// Terminal")][0]
     for line in lines[start:]:
         if line.startswith("//") or line == "\n":
             continue
